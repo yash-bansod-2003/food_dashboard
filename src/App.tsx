@@ -1,10 +1,11 @@
-import { DatePicker, Flex } from "antd";
+import { Routes, Route } from "react-router";
+import HomePage from "./pages/home";
 
 function App() {
   return (
-    <Flex>
-      <DatePicker />
-    </Flex>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+    </Routes>
   );
 }
 
