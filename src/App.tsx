@@ -1,8 +1,10 @@
+import { DatePicker, Flex } from "antd";
+
 function App() {
   return (
-    <>
-      <h1>Hello Yash Bansod</h1>
-    </>
+    <Flex>
+      <DatePicker />
+    </Flex>
   );
 }
 
