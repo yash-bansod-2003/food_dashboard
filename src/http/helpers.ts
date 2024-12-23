@@ -1,7 +1,7 @@
 import { api } from "@/http/api";
 import { MutationFunction } from "react-query";
 
-export const login = async (credentials : MutationFunction<any, string>) => {
+export const login = async (credentials: MutationFunction<unknown, string>) => {
   const response = await api.post("/auth/login", credentials);
   return response.data;
 };
