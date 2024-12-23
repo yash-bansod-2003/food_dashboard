@@ -1,6 +1,35 @@
 import { Layout, Card, Space, Form, Input, Checkbox, Button } from "antd";
 import { LockFilled, MailOutlined, LockOutlined } from "@ant-design/icons";
+import { useQuery, useMutation } from "react-query";
+import { login, logout, profile } from "@/http/helpers";
+import { useAuthenticationStore } from "@/store";
+import { Roles } from "@/lib/constants";
+
 function Login() {
+  const { setUser, logout: logoutFromStore } = useAuthenticationStore();
+  const profileQuery = useQuery("profile", profile, {
+    enabled: false,
+  });
+
+  const logoutMutation = useMutation("logout", logout, {
+    onSuccess: async () => {
+      const { data } = await profileQuery.refetch();
+      setUser(data);
+    },
+  });
+
+  const loginMutation = useMutation("login", login, {
+    onSuccess: async () => {
+      const { data } = await profileQuery.refetch();
+      if (data.role === Roles.USER) {
+        logoutFromStore();
+        logoutMutation.mutate();
+        return;
+      }
+      setUser(data);
+    },
+  });
+
   return (
     <Layout
       style={{
@@ -23,8 +52,9 @@ function Login() {
         <Form
           initialValues={{ remember: true }}
           onFinish={(values) => {
-            console.log(values);
+            loginMutation.mutate(values);
           }}
+          disabled={loginMutation.isLoading}
         >
           <Form.Item
             name="email"
@@ -42,10 +72,10 @@ function Login() {
             <Input.Password prefix={<LockOutlined />} placeholder="password" />
           </Form.Item>
           <Form.Item name="remember">
-            <Checkbox>Remember me</Checkbox>
+            <Checkbox defaultChecked>Remember me</Checkbox>
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={loginMutation.isLoading}>
               Sign in
             </Button>
           </Form.Item>
