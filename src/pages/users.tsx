@@ -1,8 +1,21 @@
+import * as React from "react";
 import { api } from "@/http/client";
-import { RightOutlined } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
-import { Breadcrumb, theme, Table } from "antd";
+import { PlusOutlined, RightOutlined } from "@ant-design/icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Breadcrumb,
+  theme,
+  Table,
+  Space,
+  Flex,
+  Button,
+  Select,
+  Input,
+  Drawer,
+  Form,
+} from "antd";
 import { Link } from "react-router";
+import { CreateUserForm } from "@/components/users/forms/create";
 
 const columns = [
   {
@@ -37,15 +50,39 @@ const users = async () => {
   return response.data;
 };
 
+const createUser = async (values: unknown) => {
+  const response = await api.post("/users", values);
+  return response.data;
+};
+
 function Users() {
+  const [form] = Form.useForm();
+  const [open, setOpen] = React.useState<boolean>(false);
+  const queryClient = useQueryClient();
   const {
-    token: { colorBgContainer },
+    token: { colorBgContainer, colorBgLayout },
   } = theme.useToken();
 
   const { data } = useQuery({
     queryKey: ["users"],
     queryFn: users,
   });
+
+  const mutation = useMutation({
+    mutationKey: ["user/create"],
+    mutationFn: createUser,
+    onSuccess: async () => {
+      console.log("user created successfully");
+    },
+  });
+
+  const handleFormSubmit = async () => {
+    await form.validateFields();
+    console.log("Values", form.getFieldsValue());
+    mutation.mutate(form.getFieldsValue());
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+    setOpen(false);
+  };
 
   return (
     <>
@@ -55,15 +92,71 @@ function Users() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Users</Breadcrumb.Item>
       </Breadcrumb>
-      <div
-        style={{
-          padding: 24,
-          background: colorBgContainer,
-          height: "100%",
-        }}
+      <Space
+        direction="vertical"
+        style={{ width: "100%", height: "100%" }}
+        size="large"
       >
-        <Table dataSource={data} columns={columns} />
-      </div>
+        <div
+          style={{
+            padding: 24,
+            background: colorBgContainer,
+          }}
+        >
+          <Flex justify="space-between">
+            <Space>
+              <Input.Search placeholder="Search..." />
+              <Select style={{ width: 120 }} defaultValue="all">
+                <Select.Option value="all">All</Select.Option>
+                <Select.Option value="admin">Admin</Select.Option>
+                <Select.Option value="manager">Manager</Select.Option>
+                <Select.Option value="user">User</Select.Option>
+              </Select>
+              <Select style={{ width: 120 }} defaultValue="active">
+                <Select.Option value="active">Active</Select.Option>
+                <Select.Option value="blocked">Blocked</Select.Option>
+              </Select>
+            </Space>
+            <Button
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => setOpen(true)}
+            >
+              Create User
+            </Button>
+            <Drawer
+              closable
+              width={720}
+              styles={{ body: { background: colorBgLayout } }}
+              destroyOnClose
+              title="Create User"
+              placement="right"
+              open={open}
+              onClose={() => setOpen(false)}
+              extra={
+                <Space>
+                  <Button onClick={() => setOpen(false)}>Cancel</Button>
+                  <Button type="primary" onClick={() => handleFormSubmit()}>
+                    Submit
+                  </Button>
+                </Space>
+              }
+            >
+              <Form form={form} layout="vertical" disabled={false}>
+                <CreateUserForm />
+              </Form>
+            </Drawer>
+          </Flex>
+        </div>
+        <div
+          style={{
+            padding: 24,
+            background: colorBgContainer,
+          }}
+        >
+          <Table dataSource={data} columns={columns} rowKey="id" />
+        </div>
+      </Space>
     </>
   );
 }
