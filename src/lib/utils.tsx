@@ -18,7 +18,7 @@ export const getDashboardMenuItems = (
           {
             key: "/users",
             icon: <UpSquareFilled />,
-            label: <NavLink to="/users">Users</NavLink>,
+            label: <NavLink to="/users?page=1&limit=3">Users</NavLink>,
           },
           {
             key: "/restaurants",

@@ -12,7 +12,7 @@ const profile = async () => {
 function RootLayout() {
   const { setUser } = useAuthenticationStore();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["profile"],
     queryFn: profile,
   });
@@ -25,6 +25,9 @@ function RootLayout() {
 
   if (isLoading) {
     return <p>Loading...</p>;
+  }
+  if (isError) {
+    return <p>{error.message}</p>;
   }
 
   return <Outlet />;

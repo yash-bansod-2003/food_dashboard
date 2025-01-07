@@ -25,7 +25,7 @@ api.interceptors.response.use(
   async (error) => {
     const orignalRequest = error.config;
 
-    if (error.response.status === 401 && !orignalRequest._isRetry) {
+    if (error.response?.status === 401 && !orignalRequest._isRetry) {
       try {
         orignalRequest._isRetry = true;
         const headers = { ...orignalRequest.headers };

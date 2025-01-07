@@ -14,7 +14,7 @@ import {
   Drawer,
   Form,
 } from "antd";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { CreateUserForm } from "@/components/users/forms/create";
 
 const columns = [
@@ -45,11 +45,6 @@ const columns = [
   },
 ];
 
-const users = async () => {
-  const response = await api.get("/users");
-  return response.data;
-};
-
 const createUser = async (values: unknown) => {
   const response = await api.post("/users", values);
   return response.data;
@@ -58,6 +53,16 @@ const createUser = async (values: unknown) => {
 function Users() {
   const [form] = Form.useForm();
   const [open, setOpen] = React.useState<boolean>(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const users = async () => {
+    const page = searchParams.get("page") ?? "1";
+    const limit = searchParams.get("limit") ?? "5";
+
+    const response = await api.get(`/users?page=${page}&limit=${limit}`);
+    return response.data;
+  };
+
   const queryClient = useQueryClient();
   const {
     token: { colorBgContainer, colorBgLayout },
@@ -154,7 +159,25 @@ function Users() {
             background: colorBgContainer,
           }}
         >
-          <Table dataSource={data} columns={columns} rowKey="id" />
+          {data && (
+            <Table
+              dataSource={data.data}
+              columns={columns}
+              rowKey="id"
+              pagination={{
+                total: data.total,
+                pageSize: data.limit,
+                current: data.page,
+                onChange: (page: number, limit: number) => {
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    page: String(page),
+                    limit: String(limit),
+                  }));
+                },
+              }}
+            />
+          )}
         </div>
       </Space>
     </>
