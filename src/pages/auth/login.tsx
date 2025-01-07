@@ -37,6 +37,14 @@ function Login() {
     enabled: false,
   });
 
+  const logoutMutation = useMutation({
+    mutationKey: ["logout"],
+    mutationFn: logout,
+    onSuccess: async () => {
+      logoutFromStore();
+    },
+  });
+
   const mutation = useMutation({
     mutationKey: ["login"],
     mutationFn: login,
@@ -44,8 +52,7 @@ function Login() {
       const query = await refetch();
       setUser(query.data);
       if (query.data.role === "user") {
-        await logout();
-        logoutFromStore();
+        logoutMutation.mutate();
       }
     },
   });

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router";
 import HomePage from "@/pages/home";
 import LoginPage from "@/pages/auth/login";
+import UsersPage from "@/pages/users";
 
 import RootLayout from "@/layouts/root";
 import AuthenticationLayout from "@/layouts/auth";
@@ -15,6 +16,7 @@ function App() {
         </Route>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/users" element={<UsersPage />} />
         </Route>
       </Route>
     </Routes>
