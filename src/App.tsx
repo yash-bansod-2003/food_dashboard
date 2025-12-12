@@ -1,14 +1,11 @@
-import { Routes, Route } from "react-router";
-import HomePage from "./pages/home";
-import LoginPage from "./pages/auth/login";
+import { Button } from "@/components/ui/button"
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/auth/login" element={<LoginPage />} />
-    </Routes>
-  );
+    <div className="flex min-h-svh flex-col items-center justify-center">
+      <Button>Click me</Button>
+    </div>
+  )
 }
 
-export default App;
+export default App

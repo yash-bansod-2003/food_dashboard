@@ -19,6 +19,9 @@ RUN npm run build
 # Use the official Nginx Alpine image as the runner stage
 FROM nginx:alpine AS runner
 
+# Copy custom Nginx configuration
+COPY default.conf /etc/nginx/conf.d/default.conf
+
 # Copy the built application from the builder stage to the Nginx html directory
 COPY --from=builder /build/dist /usr/share/nginx/html
 
