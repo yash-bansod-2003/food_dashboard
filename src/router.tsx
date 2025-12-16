@@ -2,6 +2,10 @@ import { createBrowserRouter } from "react-router";
 import { Button } from "@/components/ui/button";
 
 import LoginPage from "@/pages/auth/login.tsx";
+import UsersDashboardPage from "@/pages/dashboard/users";
+import RestaurantsDashboardPage from "@/pages/dashboard/restaurants";
+
+import DashboardLayout from "./layouts/dashboard-layout";
 
 export const router = createBrowserRouter([
   {
@@ -15,5 +19,23 @@ export const router = createBrowserRouter([
   {
     path: "/auth/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <div>Welcome to the Dashboard</div>,
+      },
+      {
+        path: "/dashboard/users",
+        element: <UsersDashboardPage />,
+      },
+      {
+        path: "/dashboard/restaurants",
+        element: <RestaurantsDashboardPage />,
+      },
+    ],
   },
 ]);
