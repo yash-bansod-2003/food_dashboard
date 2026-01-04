@@ -6,6 +6,8 @@ import {
   IconInnerShadowTop,
   IconUsers,
   IconBuildingStore,
+  IconPackage,
+  IconGift,
 } from "@tabler/icons-react";
 import axios from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
@@ -43,6 +45,16 @@ const data = {
       title: "Restaurants",
       url: "/dashboard/restaurants",
       icon: IconBuildingStore,
+    },
+    {
+      title: "Products",
+      url: "/dashboard/products",
+      icon: IconPackage,
+    },
+    {
+      title: "Promos",
+      url: "/dashboard/promos",
+      icon: IconGift,
     },
     {
       title: "Analytics",
