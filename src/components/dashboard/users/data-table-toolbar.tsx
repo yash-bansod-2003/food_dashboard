@@ -28,6 +28,7 @@ import { roles } from "./columns";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   Form,
@@ -50,19 +51,46 @@ interface DataTableToolbarProps<TData> {
 }
 
 import { z } from "zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/axios";
 
 const formSchema = z.object({
   firstname: z.string().min(2).max(50),
   lastname: z.string().min(2).max(50),
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(6).max(100),
   role: z.enum(["user", "manager", "admin"]),
+  restaurantId: z.string().optional(),
 });
 
 export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const query = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/restaurants");
+      return response.data;
+    },
+  });
+  console.log("Restaurants data:", query.data);
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
+      const response = await axiosInstance.post("/users", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      form.reset();
+      toast.success("User created successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to create user. Please try again.");
+      console.error("Error creating user:", error);
+    },
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,30 +99,31 @@ export function DataTableToolbar<TData>({
       email: "",
       password: "",
       role: "user",
+      restaurantId: undefined,
     },
   });
 
-  // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    mutation.mutate(values);
   }
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center gap-2">
         <Input
-          placeholder="Filter tasks..."
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          placeholder="Search users..."
+          value={
+            (table.getColumn("firstname")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event) =>
-            table.getColumn("title")?.setFilterValue(event.target.value)
+            table.getColumn("firstname")?.setFilterValue(event.target.value)
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("status") && (
+        {table.getColumn("role") && (
           <DataTableFacetedFilter
             column={table.getColumn("role")}
-            title="Status"
+            title="Role"
             options={roles}
           />
         )}
@@ -122,15 +151,17 @@ export function DataTableToolbar<TData>({
                   <SheetHeader>
                     <SheetTitle>Create User</SheetTitle>
                     <SheetDescription>
-                      Create new user here. Click save when you&apos;re done.
+                      Add a new user to the system. Click create when
+                      you&apos;re done.
                     </SheetDescription>
                   </SheetHeader>
                   <div className="grid flex-1 auto-rows-min gap-6 px-4">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Basic Info</CardTitle>
+                        <CardTitle>Personal Information</CardTitle>
                         <CardDescription>
-                          Enter the user&apos;s basic information.
+                          Enter the user&apos;s personal details including name
+                          and email address.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
@@ -142,7 +173,7 @@ export function DataTableToolbar<TData>({
                               <FormItem>
                                 <FormLabel>First Name</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Yash" {...field} />
+                                  <Input placeholder="John" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -155,7 +186,7 @@ export function DataTableToolbar<TData>({
                               <FormItem>
                                 <FormLabel>Last Name</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Bansod" {...field} />
+                                  <Input placeholder="Doe" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -167,10 +198,11 @@ export function DataTableToolbar<TData>({
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel>Email Address</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="yash@example.com"
+                                  type="email"
+                                  placeholder="john.doe@example.com"
                                   {...field}
                                 />
                               </FormControl>
@@ -182,9 +214,9 @@ export function DataTableToolbar<TData>({
                     </Card>
                     <Card>
                       <CardHeader>
-                        <CardTitle> Security Info</CardTitle>
+                        <CardTitle>Security</CardTitle>
                         <CardDescription>
-                          Set a password and role for the user.
+                          Set a secure password for this user account.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
@@ -195,7 +227,11 @@ export function DataTableToolbar<TData>({
                             <FormItem>
                               <FormLabel>Password</FormLabel>
                               <FormControl>
-                                <Input placeholder="********" {...field} />
+                                <Input
+                                  type="password"
+                                  placeholder="Enter a secure password"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -205,12 +241,13 @@ export function DataTableToolbar<TData>({
                     </Card>
                     <Card>
                       <CardHeader>
-                        <CardTitle> Role Info</CardTitle>
+                        <CardTitle>Role & Restaurant Assignment</CardTitle>
                         <CardDescription>
-                          Set a role for the user.
+                          Assign a role to define permissions and associate the
+                          user with a restaurant.
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-6">
+                      <CardContent className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="role"
@@ -220,7 +257,7 @@ export function DataTableToolbar<TData>({
                               <FormControl>
                                 <Select {...field}>
                                   <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Role" />
+                                    <SelectValue placeholder="Select a role" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="user">User</SelectItem>
@@ -235,13 +272,46 @@ export function DataTableToolbar<TData>({
                             </FormItem>
                           )}
                         />
+
+                        <FormField
+                          control={form.control}
+                          name="restaurantId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Restaurant (Optional)</FormLabel>
+                              <FormControl>
+                                <Select {...field}>
+                                  <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Choose restaurant" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {query.data.data?.map(
+                                      (restaurant: {
+                                        id: number;
+                                        name: string;
+                                      }) => (
+                                        <SelectItem
+                                          key={restaurant.id}
+                                          value={String(restaurant.id)}
+                                        >
+                                          {restaurant.name}
+                                        </SelectItem>
+                                      ),
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </CardContent>
                     </Card>
                   </div>
                   <SheetFooter>
-                    <Button type="submit">Save changes</Button>
+                    <Button type="submit">Create User</Button>
                     <SheetClose asChild>
-                      <Button variant="outline">Close</Button>
+                      <Button variant="outline">Cancel</Button>
                     </SheetClose>
                   </SheetFooter>
                 </form>
